@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR JK</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #3498db;
+            padding: 10px;
+        }
+        .wrapper {
+            background: #fff;
+            max-width: 400px;
+            width: 100%;
+            padding: 20px 25px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        header h1 { font-size: 24px; font-weight: 600; margin-bottom: 10px; }
+        header h2 { font-size: 20px; font-weight: 500; margin-bottom: 10px; }
+        header p { color: #555; font-size: 16px; margin-bottom: 20px; }
+        .form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .input-container {
+            position: relative;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .input-container input {
+            width: calc(100% - 40px);
+            height: 50px;
+            padding: 0 15px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            outline: none;
+        }
+        .input-container .clear-icon {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #888;
+            display: none;
+        }
+        .input-container .clear-icon:hover { color: #333; }
+        .input-container input:not(:placeholder-shown) + .clear-icon { display: block; }
+        .button-container {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .button-container button {
+            flex: 1;
+            height: 40px;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        #copy-btn { 
+            background: #2ecc71; 
+            color: #fff;
+        }
+        #copy-btn:hover { background: #27ae60; }
+        #open-btn { 
+            background: #e67e22; 
+            color: #fff;
+        }
+        #open-btn:hover { background: #d35400; }
+        #scanner-btn { 
+            background: #9b59b6; 
+            color: #fff;
+        }
+        #scanner-btn:hover { background: #8e44ad; }
+        #generate-btn { 
+            width: 100%;
+            height: 40px;
+            margin-top: 10px;
+            background: #3498db; 
+            color: #fff;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        #generate-btn:hover { background: #2980b9; }
+        .qr-code { display: none; margin-top: 20px; }
+        .qr-code img { max-width: 100%; border: 1px solid #ddd; border-radius: 5px; }
+        .qr-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .icon-container {
+            background: #f1f1f1;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: background 0.3s;
+        }
+        .icon-container:hover {
+            background: #e0e0e0;
+        }
+        .icon-container a {
+            color: #3498db;
+            font-size: 18px;
+            text-decoration: none;
+        }
+        .icon-container a:hover {
+            color: #2980b9;
+        }
+        .wrapper.active .qr-code { display: block; }
+        .scan-result {
+            margin-top: 20px;
+            padding: 10px;
+            background: #f1f1f1;
+            border-radius: 5px;
+            display: none;
+        }
+        .scan-result p {
+            margin: 0;
+            font-size: 16px;
+            color: #333;
+        }
+        .scan-result .copy-icon {
+            margin-left: 10px;
+            cursor: pointer;
+            color: #3498db;
+        }
+        .scan-result .copy-icon:hover {
+            color: #2980b9;
+        }
+        #scanner-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        #scanner-modal video {
+            max-width: 100%;
+            max-height: 80vh;
+            border-radius: 10px;
+        }
+        #scanner-modal .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <header>
+            <h1>QR JK</h1>
+            <h2>Noon Facility </h2>
+            <p>DEVELOPER : JAMSHED KHAN</p>
+        </header>
+        <div class="form">
+            <div class="input-container">
+                <input type="text" spellcheck="false" id="qr-input" placeholder="Enter your text" value="https://idp-api.sc.noon.team/public/facility-qr#903910e9ea1341d182fe4c3690a2d8de">
+                <i class="fas fa-times clear-icon" id="clear-btn"></i>
+            </div>
+            <div class="button-container">
+                <button id="copy-btn">Copy</button>
+                <button id="open-btn">Open</button>
+                <button id="scanner-btn">Scan</button>
+            </div>
+            <button id="generate-btn">Generate QR Code</button>
+        </div>
+        <div class="qr-code">
+            <img src="" alt="QR Code">
+            <div class="qr-actions">
+                <div class="icon-container">
+                    <a id="download-btn" href="#" download="qr-code.png"><i class="fas fa-download"></i></a>
+                </div>
+                <div class="icon-container">
+                    <a id="print-btn" href="#"><i class="fas fa-print"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="scan-result" id="scan-result">
+            <p id="scanned-data"></p>
+            <i class="fas fa-copy copy-icon" id="copy-scan-btn"></i>
+        </div>
+    </div>
+
+    <!-- Scanner Modal -->
+    <div id="scanner-modal">
+        <div class="close-btn" id="close-scanner-btn">&times;</div>
+        <video id="scanner-video"></video>
+    </div>
+
+    <!-- Include jsQR Library -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.min.js"></script>
+    <script>
+        const wrapper = document.querySelector(".wrapper"),
+            qrInput = document.querySelector("#qr-input"),
+            generateBtn = document.querySelector("#generate-btn"),
+            copyBtn = document.querySelector("#copy-btn"),
+            openBtn = document.querySelector("#open-btn"),
+            scannerBtn = document.querySelector("#scanner-btn"),
+            clearBtn = document.querySelector("#clear-btn"),
+            qrImg = document.querySelector(".qr-code img"),
+            scanResult = document.querySelector("#scan-result"),
+            scannedData = document.querySelector("#scanned-data"),
+            copyScanBtn = document.querySelector("#copy-scan-btn"),
+            scannerModal = document.querySelector("#scanner-modal"),
+            scannerVideo = document.querySelector("#scanner-video"),
+            closeScannerBtn = document.querySelector("#close-scanner-btn");
+
+        let previousValue = "";
+        let scannerStream = null;
+
+        // Generate QR Code on button click
+        generateBtn.addEventListener("click", () => {
+            const inputValue = qrInput.value.trim();
+            if (!inputValue || inputValue === previousValue) return;
+
+            previousValue = inputValue;
+            generateBtn.innerText = "Generating...";
+            const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(inputValue)}`;
+            qrImg.src = qrCodeUrl;
+
+            qrImg.addEventListener("load", () => {
+                wrapper.classList.add("active");
+                generateBtn.innerText = "Generate QR Code";
+
+                // Set the download link
+                const downloadBtn = document.querySelector("#download-btn");
+                downloadBtn.href = qrCodeUrl;
+                downloadBtn.download = `qr-code-${Date.now()}.png`;
+
+                // Add print functionality
+                const printBtn = document.querySelector("#print-btn");
+                printBtn.onclick = () => {
+                    const printWindow = window.open("");
+                    printWindow.document.write(`<img src="${qrCodeUrl}" alt="QR Code" style="max-width: 100%;">`);
+                    printWindow.document.close();
+                    printWindow.print();
+                };
+            });
+        });
+
+        // Copy text to clipboard
+        copyBtn.addEventListener("click", () => {
+            const inputValue = qrInput.value.trim();
+            if (!inputValue) {
+                alert("Input field is empty!");
+                return;
+            }
+
+            navigator.clipboard.writeText(inputValue).then(() => {
+                alert("Text copied to clipboard!");
+            }).catch(err => {
+                alert("Failed to copy text!");
+            });
+        });
+
+        // Open URL in new tab
+        openBtn.addEventListener("click", () => {
+            const inputValue = qrInput.value.trim();
+            if (!inputValue) {
+                alert("Input field is empty!");
+                return;
+            }
+
+            window.open(inputValue, "_blank");
+        });
+
+        // Scanner functionality
+        scannerBtn.addEventListener("click", () => {
+            scannerModal.style.display = "flex";
+            startScanner();
+        });
+
+        // Close scanner modal
+        closeScannerBtn.addEventListener("click", () => {
+            stopScanner();
+            scannerModal.style.display = "none";
+        });
+
+        // Start scanner
+        function startScanner() {
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+                .then(stream => {
+                    scannerStream = stream;
+                    scannerVideo.srcObject = stream;
+                    scannerVideo.play();
+                    requestAnimationFrame(scanQRCode);
+                })
+                .catch(err => {
+                    alert("Unable to access the camera. Please allow camera access.");
+                    console.error(err);
+                });
+        }
+
+        // Stop scanner
+        function stopScanner() {
+            if (scannerStream) {
+                scannerStream.getTracks().forEach(track => track.stop());
+                scannerStream = null;
+            }
+        }
+
+        // Scan QR Code
+        function scanQRCode() {
+            if (scannerVideo.readyState === scannerVideo.HAVE_ENOUGH_DATA) {
+                const canvas = document.createElement("canvas");
+                canvas.width = scannerVideo.videoWidth;
+                canvas.height = scannerVideo.videoHeight;
+                const context = canvas.getContext("2d");
+                context.drawImage(scannerVideo, 0, 0, canvas.width, canvas.height);
+                const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                    inversionAttempts: "dontInvert",
+                });
+
+                if (code) {
+                    scannedData.innerText = code.data;
+                    scanResult.style.display = "flex";
+                    stopScanner();
+                    scannerModal.style.display = "none";
+                    alert(`Scanned Data: ${code.data}`);
+                }
+            }
+            requestAnimationFrame(scanQRCode);
+        }
+
+        // Copy scanned data to clipboard
+        copyScanBtn.addEventListener("click", () => {
+            const textToCopy = scannedData.innerText;
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                alert("Scanned data copied to clipboard!");
+            }).catch(err => {
+                alert("Failed to copy scanned data!");
+            });
+        });
+
+        // Clear input field
+        clearBtn.addEventListener("click", () => {
+            qrInput.value = "";
+            wrapper.classList.remove("active");
+            previousValue = "";
+            clearBtn.style.display = "none";
+        });
+
+        // Show/hide clear icon based on input value
+        qrInput.addEventListener("input", () => {
+            if (!qrInput.value.trim()) {
+                wrapper.classList.remove("active");
+                previousValue = "";
+                clearBtn.style.display = "none";
+            } else {
+                clearBtn.style.display = "block";
+            }
+        });
+    </script>
+</body>
+</html>
